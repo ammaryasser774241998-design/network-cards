@@ -1,8 +1,8 @@
 services:
   - type: web
-    name: network-cards-system
+    name: network-cards
     runtime: docker
-    region: frankfurt
+    region: virginia
     plan: free
     healthCheckPath: /up
     envVars:
@@ -29,5 +29,5 @@ databases:
   - name: network-cards-system-db
     databaseName: network_cards
     user: network_cards
-    region: frankfurt
+    region: virginia
     plan: basic-256mb

@@ -9,7 +9,7 @@
 
 ## Deploying to Render
 
-Create a Render Blueprint from the GitHub repository and review its resources and prices before applying it. [`render.yaml`](./render.yaml) creates a Frankfurt web service and a persistent PostgreSQL database in the same region. The web service uses Render's free plan; the database uses the paid `basic-256mb` plan. Upgrade the web service separately if you need it to remain always on. The Docker image builds the Vite assets, installs production PHP dependencies, and listens on Render's `PORT` (default `10000`).
+Create a Render Blueprint from the GitHub repository and review its resources and prices before applying it. [`render.yaml`](./render.yaml) reuses the existing `network-cards` web service and creates a persistent PostgreSQL database in the same Virginia region. The web service uses Render's free plan; the database uses the paid `basic-256mb` plan. Upgrade the web service separately if you need it to remain always on. The Docker image builds the Vite assets, installs production PHP dependencies, and listens on Render's `PORT` (default `10000`).
 
 The Blueprint prompts you to provide a stable `APP_KEY`, supplies the PostgreSQL connection URL, and runs migrations when the service starts. Generate the key with `php artisan key:generate --show` and enter it directly in Render's protected Blueprint prompt; do not put the production key in `.env` or commit it to GitHub. Laravel uses `RENDER_EXTERNAL_URL` as the public URL unless you set `APP_URL` yourself.
 

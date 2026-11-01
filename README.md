@@ -7,6 +7,37 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
+## Deploying to Render
+
+Create a Render Blueprint from the GitHub repository and review its resources and prices before applying it. [`render.yaml`](./render.yaml) creates a Frankfurt web service and a persistent PostgreSQL database in the same region. The web service uses Render's free plan; the database uses the paid `basic-256mb` plan. Upgrade the web service separately if you need it to remain always on. The Docker image builds the Vite assets, installs production PHP dependencies, and listens on Render's `PORT` (default `10000`).
+
+The Blueprint prompts you to provide a stable `APP_KEY`, supplies the PostgreSQL connection URL, and runs migrations when the service starts. Generate the key with `php artisan key:generate --show` and enter it directly in Render's protected Blueprint prompt; do not put the production key in `.env` or commit it to GitHub. Laravel uses `RENDER_EXTERNAL_URL` as the public URL unless you set `APP_URL` yourself.
+
+### Import the existing local database
+
+The Render database starts empty; deploying the code does not copy data or login accounts from your local MySQL database. After the first successful deployment:
+
+1. Back up the local database and verify the deployed service has completed all migrations.
+2. In Render's PostgreSQL dashboard, copy the **external** connection URL. Do not paste it into source code, `.env`, or chat.
+3. On the local Windows machine, load the XAMPP PostgreSQL PDO extension for that command and run a dry run:
+
+   ```powershell
+   php -d extension=php_pdo_pgsql.dll artisan database:import-render
+   ```
+
+   Enter the external database URL at the hidden prompt. The command displays table names and row counts only. It never writes during a dry run.
+
+4. If the source and destination are correct, run the import:
+
+   ```powershell
+   php -d extension=php_pdo_pgsql.dll artisan database:import-render --run
+   ```
+
+   Confirm the prompt to copy application records. The command refuses a non-empty or unmigrated destination, compares table schemas, copies rows in dependency order inside a transaction, and resets PostgreSQL ID sequences. Browser sessions, password-reset tokens, and personal API tokens are intentionally left behind; users and password hashes are copied so existing login credentials continue to work.
+
+The import transfers sensitive customer, card, and financial records to Render. Review your privacy and retention requirements before confirming. Uploaded files are not part of the database import; configure persistent storage separately if you need to keep them across deploys. Free Render web services can sleep when idle.
+
+
 ## About Laravel
 
 Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:

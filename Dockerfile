@@ -1,37 +1,67 @@
+FROM node:22-bookworm-slim AS frontend
+
+WORKDIR /app
+
+COPY package.json ./
+RUN npm install --no-audit --no-fund
+
+COPY resources ./resources
+COPY vite.config.js ./
+RUN npm run build
+
 FROM php:8.2-apache
 
-# تثبيت الحزم المطلوبة وادوات النظام
-RUN apt-get update && apt-get install -y \
-    git \
-    curl \
-    libpng-dev \
-    libonig-dev \
-    libxml2-dev \
-    zip \
-    unzip
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        libfreetype6-dev \
+        libjpeg62-turbo-dev \
+        libonig-dev \
+        libpng-dev \
+        libpq-dev \
+        libxml2-dev \
+        libzip-dev \
+        unzip \
+        zip \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install -j"$(nproc)" \
+        bcmath \
+        exif \
+        gd \
+        mbstring \
+        pcntl \
+        pdo_mysql \
+        pdo_pgsql \
+        zip \
+    && a2enmod rewrite \
+    && rm -rf /var/lib/apt/lists/*
 
-# تثبيت إضافات PHP الضرورية للارافيل وقاعدة البيانات
-RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# تثبيت Composer
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
-
-# تحديد مجلد العمل
 WORKDIR /var/www/html
 
-# نسخ ملفات المشروع إلى الحاوية
-COPY . /var/www/html
+COPY . .
+COPY --from=frontend --chown=www-data:www-data /app/public/build ./public/build
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint
 
-# تغيير مجلد الـ Document Root الخاص بـ Apache ليوجه إلى public الخاصة بلارافيل
-ENV APACHE_DOCUMENT_ROOT /var/www/html/public
-RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
-RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
+RUN composer install \
+        --no-dev \
+        --no-interaction \
+        --no-progress \
+        --prefer-dist \
+        --optimize-autoloader \
+    && sed -ri 's!/var/www/html!/var/www/html/public!g' /etc/apache2/sites-available/000-default.conf \
+    && printf '<Directory /var/www/html/public>\n    AllowOverride All\n    Require all granted\n</Directory>\n' \
+        > /etc/apache2/conf-available/laravel.conf \
+    && a2enconf laravel \
+    && mkdir -p storage/app/public storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs \
+    && chown -R www-data:www-data storage bootstrap/cache \
+    && chmod +x /usr/local/bin/docker-entrypoint
 
-# ضبط البورت ليتوافق مع منصة Render (بورت 10000)
-RUN sed -i 's/80/10000/g' /etc/apache2/ports.conf /etc/apache2/sites-available/000-default.conf
+ENV APACHE_DOCUMENT_ROOT=/var/www/html/public \
+    APP_ENV=production \
+    APP_DEBUG=false \
+    LOG_CHANNEL=stderr \
+    PORT=10000
 
-# تفعيل Rewrite Module
-RUN a2enmod rewrite
+EXPOSE 10000
 
-# ضبط صلاحيات مجلد التخزين والـ cache
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+ENTRYPOINT ["docker-entrypoint"]

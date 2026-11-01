@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "285511148971",
+    "project_id": "com-example-network-aa764",
+    "storage_bucket": "com-example-network-aa764.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:285511148971:android:6b4d58086edfc325429eee",
+        "android_client_info": {
+          "package_name": "com.networkcards.companion"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDsb98WURx28xng5laBrjFK8dwazg5tifw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

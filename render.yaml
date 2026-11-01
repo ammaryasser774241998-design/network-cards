@@ -15,19 +15,10 @@ services:
       - key: DB_CONNECTION
         value: pgsql
       - key: DATABASE_URL
-        fromDatabase:
-          name: network-cards-system-db
-          property: connectionString
+        sync: false
       - key: SESSION_DRIVER
         value: database
       - key: CACHE_STORE
         value: database
       - key: QUEUE_CONNECTION
         value: database
-
-databases:
-  - name: network-cards-system-db
-    databaseName: network_cards
-    user: network_cards
-    region: virginia
-    plan: basic-256mb

@@ -14,7 +14,7 @@ class ImportRenderDatabase extends Command
     protected $signature = 'database:import-render
                             {--run : Copy data after reviewing the dry-run counts}';
 
-    protected $description = 'Safely copy application data from local MySQL to an empty Render PostgreSQL database';
+    protected $description = 'Safely copy application data from local MySQL to an empty external PostgreSQL database';
 
     private const TABLES = [
         'tenants',
@@ -41,7 +41,7 @@ class ImportRenderDatabase extends Command
             return self::FAILURE;
         }
 
-        $databaseUrl = $this->secret('Render PostgreSQL external connection URL');
+        $databaseUrl = $this->secret('External PostgreSQL connection URL');
         if (! is_string($databaseUrl) || ! preg_match('/^postgres(?:ql)?:\/\//i', $databaseUrl)) {
             $this->components->error('A valid PostgreSQL connection URL is required.');
 
@@ -100,7 +100,7 @@ class ImportRenderDatabase extends Command
         }
 
         if (! $this->confirm(
-            'This copies user accounts, password hashes, customer records, card PINs, and financial records to Render. Continue?'
+            'This copies user accounts, password hashes, customer records, card PINs, and financial records to the external provider. Continue?'
         )) {
             return self::SUCCESS;
         }

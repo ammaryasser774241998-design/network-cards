@@ -25,6 +25,17 @@ case "${DB_CONNECTION:-}" in
         ;;
 esac
 
+if [ "${DB_CONNECTION}" = "pgsql" ]; then
+    case "${DATABASE_URL:-}" in
+        postgres://*|postgresql://*)
+            ;;
+        *)
+            echo "Set DATABASE_URL to the external PostgreSQL connection URL in the hosting environment." >&2
+            exit 1
+            ;;
+    esac
+fi
+
 sed -i "s/^Listen 80$/Listen ${port}/" /etc/apache2/ports.conf
 sed -i "s#^<VirtualHost \\*:.*>#<VirtualHost *:${port}>#" /etc/apache2/sites-available/000-default.conf
 

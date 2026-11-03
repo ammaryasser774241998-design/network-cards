@@ -13,9 +13,13 @@ if [ "$port" -lt 1 ] || [ "$port" -gt 65535 ]; then
     exit 1
 fi
 
-if [ -z "${APP_KEY:-}" ]; then
-    echo "APP_KEY must be configured in the hosting environment." >&2
-    exit 1
+if [ -z "${DB_CONNECTION:-}" ]; then
+    case "${DATABASE_URL:-}" in
+        postgres://*|postgresql://*)
+            DB_CONNECTION=pgsql
+            export DB_CONNECTION
+            ;;
+    esac
 fi
 
 case "${DB_CONNECTION:-}" in
@@ -24,6 +28,11 @@ case "${DB_CONNECTION:-}" in
         exit 1
         ;;
 esac
+
+if [ -z "${APP_KEY:-}" ]; then
+    echo "APP_KEY must be configured in the hosting environment." >&2
+    exit 1
+fi
 
 if [ "${DB_CONNECTION}" = "pgsql" ]; then
     case "${DATABASE_URL:-}" in
